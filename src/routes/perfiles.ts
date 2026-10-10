@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { check } from 'express-validator';
 import { validarCampos } from '../middlewares/validar-campos';
 import { validarJWT } from '../middlewares/validar-jwt';
-import { getMiPerfil, actualizarPerfil } from '../controllers/profileController';
+import { getMiPerfil, actualizarPerfil} from '../controllers/profileController';
 
 const router = Router();
 
@@ -22,5 +22,6 @@ router.put('/actualizar', [
     check('phone', 'El formato del teléfono no es válido').optional().isString(),
     validarCampos
 ], actualizarPerfil);
+
 
 export default router;

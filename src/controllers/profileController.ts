@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import Profile from '../models/profile';
+import Familiar from '../models/familiares'; 
+
 
 /**
  * 👤 Obtener el perfil del usuario autenticado (mediante el token)
@@ -105,3 +107,4 @@ export const actualizarPuntosPerfil = async (usuarioId: string, puntosASumar: nu
         return null;
     }
 };
+

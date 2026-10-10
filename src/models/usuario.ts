@@ -4,6 +4,7 @@ import { Schema, model, Model } from 'mongoose';
 export interface IUsuario {
   username: string;
   email: string;
+  identificacion: string;
   password?: string;
   role: string;
   terminos?: boolean;
@@ -18,6 +19,7 @@ export interface IUsuario {
 const usuarioSchema = new Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  identificacion: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, required: true, default: 'USER' },
   terminos: { type: Boolean, required: false },

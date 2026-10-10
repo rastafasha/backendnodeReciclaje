@@ -35,7 +35,7 @@ export const getUsuariosList = async (req: Request, res: Response) => {
  * 🆕 Crear un usuario común (USER)
  */
 export const crearUsuarios = async (req: Request, res: Response) => { 
-    const { email, password, username } = req.body;
+    const { email, password, username, identificacion } = req.body;
 
     try {
         const existeEmail = await Usuario.findOne({ email });
@@ -54,6 +54,7 @@ export const crearUsuarios = async (req: Request, res: Response) => {
         const nuevoPerfil = new Profile({
             usuario: usuario._id,
             first_name: username, // Usamos el username como nombre inicial
+            identificacion: identificacion, // Usamos el username como nombre inicial
             puntos_totales: 0,
             puntos_actuales: 0
         });
