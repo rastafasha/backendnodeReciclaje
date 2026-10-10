@@ -5,7 +5,8 @@ export interface IProfile {
   usuario: Schema.Types.ObjectId;  // Relación inversa con el Usuario
   first_name?: string;
   last_name?: string;
-  phone?: string;
+  phone_office?: string;
+  phone_mobile?: string;
   avatar_url?: string;            // Foto de perfil del reciclador
   puntos_totales: number;         // Histórico de puntos ganados
   puntos_actuales: number;        // Puntos disponibles para canjear
@@ -31,7 +32,11 @@ const profileSchema = new Schema({
     type: String,
     trim: true
   },
-  phone: {
+  phone_office: {
+    type: String,
+    trim: true
+  },
+  phone_mobile: {
     type: String,
     trim: true
   },

@@ -8,6 +8,7 @@ export interface IUsuario {
   role: string;
   terminos?: boolean;
   google: boolean;
+  facebook: boolean;
   profile?: Schema.Types.ObjectId; 
   createdAt: Date;
   updatedAt: Date;
@@ -21,6 +22,7 @@ const usuarioSchema = new Schema({
   role: { type: String, required: true, default: 'USER' },
   terminos: { type: Boolean, required: false },
   google: { type: Boolean, default: false },
+  facebook: { type: Boolean, default: false },
   profile: { type: Schema.Types.ObjectId, ref: 'Profile' }, 
   createdAt: { type: Date, default: Date.now, required: true },
   updatedAt: { type: Date, default: Date.now, required: true }

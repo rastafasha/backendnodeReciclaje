@@ -37,7 +37,7 @@ export const getMiPerfil = async (req: Request, res: Response) => {
  */
 export const actualizarPerfil = async (req: Request, res: Response) => {
     const usuarioId = req.uid;
-    const { first_name, last_name, phone, avatar_url, pais, ciudad } = req.body;
+    const { first_name, last_name, phone_office, phone_mobile, avatar_url, pais, ciudad } = req.body;
 
     try {
         // Buscamos el perfil que le pertenece al usuario autenticado
@@ -54,7 +54,8 @@ export const actualizarPerfil = async (req: Request, res: Response) => {
         const camposActualizar = {
             first_name: first_name || perfilDB.first_name,
             last_name: last_name || perfilDB.last_name,
-            phone: phone || perfilDB.phone,
+            phone_office: phone_office || perfilDB.phone_office,
+            phone_mobile: phone_mobile || perfilDB.phone_mobile,
             avatar_url: avatar_url || perfilDB.avatar_url,
             pais: pais || perfilDB.pais,
             ciudad: ciudad || perfilDB.ciudad,

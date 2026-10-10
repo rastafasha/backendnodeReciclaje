@@ -34,7 +34,7 @@ export const getUsuariosList = async (req: Request, res: Response) => {
 /**
  * 🆕 Crear un usuario común (USER)
  */
-export const crearUsuarios = async (req: Request, res: Response) => {
+export const crearUsuarios = async (req: Request, res: Response) => { 
     const { email, password, username } = req.body;
 
     try {
