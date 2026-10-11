@@ -5,9 +5,9 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/server.js",
+    "start": "node dist/server.js || node src/dist/server.js || node dist/src/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc" ,
+    "build": "tsc --skipLibCheck",
     "seed": "ts-node src/seeders/usuariosSeeder.ts",
     "seed:materiales": "ts-node src/seeders/materialesSeeder.ts"
   },
@@ -28,7 +28,7 @@
     "uuid": "^14.0.2",
     "v4": "^0.0.1",
     "web-push": "^3.6.7",
-     "typescript": "^5.4.5" 
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
