@@ -38,7 +38,7 @@ export const actualizarImagen = async (
                 return false;
             }
             // Agrega detalleOpcional o un campo de imagen si lo requieres en tu esquema
-            material.detalleOpcional = `Imagen de respaldo: ${nombreArchivo}`;
+            (material as any).detalleOpcional = `Imagen de respaldo: ${nombreArchivo}`;
             material.updatedAt = new Date();
             await material.save();
             return true;
