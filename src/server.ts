@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   "http://localhost:4200",
   "http://localhost:4203", // 👈 Tu panel Admin CRM corriendo aquí
-  "http://localhost:4206",
+  "http://localhost:8100",
   "https://admn-reciclaje.vercel.app",
   "https://app-reciclaje-eight.vercel.app"
 ];

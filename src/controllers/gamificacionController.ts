@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
 import Usuario from '../models/usuario'; // Tu modelo importado
+import Profile from '../models/profile';
+import Sorteo from '../models/sorteo';
+import Notificacion from '../models/notificacion';
+import { enviarNotificacionPushGlobal } from './pushController'; // Tu motor enviador real
 
 export const obtenerTablaLiderazgo = async (req: Request, res: Response): Promise<Response> => {
   try {
@@ -190,5 +194,116 @@ export const obtenerMetricasDashboard = async (req: Request, res: Response): Pro
       message: "Error interno al compilar estadísticas globales del dashboard",
       error: error.message
     });
+  }
+};
+
+
+/**
+ * 🎲 GATILLO DEL SORTEO PROPORCIONAL AUTOMÁTICO (Solo Admin)
+ * POST /api/gamificacion/ejecutar-sorteo
+ */
+export const ejecutarSorteoProporcional = async (req: Request, res: Response): Promise<Response> => {
+  const adminId = req.uid;
+
+  try {
+    // 1. Extraer perfiles que alcanzaron el umbral estricto de Coggle (puntos_actuales >= 55)
+    const perfilesClasificados = await Profile.find({ puntos_actuales: { $gte: 55 } }).select('usuario');
+    const totalElegibles = perfilesClasificados.length;
+
+    if (totalElegibles === 0) {
+      return res.status(404).json({
+        ok: false,
+        msg: 'No hay participantes clasificados que alcancen la meta mínima de 55 puntos.'
+      });
+    }
+
+    // 2. Lógica matemática de Coggle: 1 ganador por cada 5 clasificados (mínimo 1)
+    const cantidadGanadores = Math.max(1, Math.floor(totalElegibles / 5));
+
+    // 3. Obtener el arreglo plano de IDs de usuarios
+    let poolUsuarios = perfilesClasificados.map(p => p.usuario.toString());
+
+    // 4. Algoritmo puro de barajado aleatorio (Fisher-Yates Shuffle)
+    for (let i = poolUsuarios.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [poolUsuarios[i], poolUsuarios[j]] = [poolUsuarios[j], poolUsuarios[i]];
+    }
+
+    // 5. Extraer la porción proporcional de ganadores
+    const idsGanadoresStrings = poolUsuarios.slice(0, cantidadGanadores);
+
+    // 6. Buscar los datos completos de identidad de los ganadores seleccionados
+    const usuariosGanadores = await Usuario.find({ _id: { $in: idsGanadoresStrings } })
+      .select('username email identificacion profile');
+
+    // 7. Persistir la auditoría de la rifa en Atlas
+    const nuevoSorteo = new Sorteo({
+      totalElegibles,
+      cantidadGanadores,
+      ganadores: idsGanadoresStrings,
+      creado_por: adminId
+    });
+    await nuevoSorteo.save();
+
+    // 8. Inyectar automáticamente la alerta en la campana de notificaciones del ganador (Historial/Polling)
+    const alertasGanadores = idsGanadoresStrings.map(uid => ({
+      usuario: uid,
+      titulo: '🎉 ¡Felicidades! Has ganado el Sorteo Mercadona',
+      mensaje: 'Tu constancia en las 3 comidas ecológicas dio frutos. Has sido seleccionado en el sorteo.',
+      tipo: 'RECOMPENSA_CANJEADA',
+      leido: false
+    }));
+    await Notificacion.insertMany(alertasGanadores);
+
+    return res.status(200).json({
+      ok: true,
+      msg: `Sorteo ejecutado. Se seleccionaron ${cantidadGanadores} ganadores de ${totalElegibles} elegibles.`,
+      data: {
+        sorteoId: nuevoSorteo._id,
+        totalElegibles,
+        cantidadGanadores,
+        ganadores: usuariosGanadores
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ [ERROR EN ALGORITMO SORTEO]:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error interno al procesar el algoritmo del sorteo',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * 🎁 9. BOTÓN CTA DEL ADMIN: DISPARAR NOTIFICACIÓN PUSH EXCLUSIVA A LOS GANADORES
+ * POST /api/gamificacion/notificar-ganadores
+ */
+export const notificarGanadoresPush = async (req: Request, res: Response): Promise<Response> => {
+  const { sorteoId } = req.body;
+
+  try {
+    const sorteoInfo = await Sorteo.findById(sorteoId);
+    if (!sorteoInfo) {
+      return res.status(404).json({ ok: false, msg: 'Registro físico del sorteo no encontrado.' });
+    }
+
+    const tituloPush = '🎁 ¡Ganaste el premio de Mercadona! ♻️';
+    const mensajePush = '¡Felicidades! Fuiste seleccionado en la ruleta de reciclaje. Revisa tu bandeja de entrada.';
+
+    // Despachamos las alertas flotantes usando el motor asíncrono segmentado por uid
+    const promesasPush = sorteoInfo.ganadores.map(uid => 
+      enviarNotificacionPushGlobal(tituloPush, mensajePush, '/tabs/historial', uid.toString())
+    );
+    await Promise.all(promesasPush);
+
+    return res.json({
+      ok: true,
+      msg: `Banners push flotantes despachados con éxito a los ${sorteoInfo.ganadores.length} ganadores.`
+    });
+
+  } catch (error: any) {
+    return res.status(500).json({ ok: false, msg: 'Error al lanzar notificaciones push segmentadas', error: error.message });
   }
 };

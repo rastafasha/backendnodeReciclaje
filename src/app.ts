@@ -12,6 +12,7 @@ import reglasRoutes from './routes/reglas';
 import terminosRoutes from './routes/terminosRoutes';
 import gamificacionRoutes from './routes/gamificacion';
 import comunicadoRoutes from './routes/comunicado';
+import busquedaRoutes from './routes/busqueda';
 
 const app = express();
 
@@ -21,6 +22,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:4200",
   "http://localhost:4203", // 👈 Tu panel Admin CRM corriendo aquí
+  "http://localhost:8100", // 👈 Tu panel Admin CRM corriendo aquí
   "https://admn-reciclaje.vercel.app",
   "https://app-reciclaje-eight.vercel.app",
 ];
@@ -72,5 +74,6 @@ app.use('/api/reglas', reglasRoutes);
 app.use('/api/terminos', terminosRoutes);
 app.use('/api/gamificacion', gamificacionRoutes);
 app.use('/api/comunicados', comunicadoRoutes);
+app.use('/api/todo', busquedaRoutes);
 
 export default app;
