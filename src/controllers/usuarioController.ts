@@ -302,64 +302,7 @@ export const newest = async (req: Request, res: Response) => {
     }
 };
 
-/**
- * 🔒 Iniciar proceso de recuperación de contraseña (Token Recovery)
- */
-export const set_token_recovery = async (req: Request, res: Response) => {
-    const { email } = req.params;
-    try {
-        // Aquí agregarías tu lógica para generar un código/token aleatorio y guardarlo en la DB
-        return res.json({
-            ok: true,
-            msg: `Token de recuperación generado para ${email}`
-        });
-    } catch (error: any) {
-        return res.status(500).json({ ok: false, msg: 'Error de recuperación' });
-    }
-};
 
-/**
- * 🔑 Verificar el token de recuperación provisto por el usuario
- */
-export const verify_token_recovery = async (req: Request, res: Response) => {
-    const { email, codigo } = req.params;
-    try {
-        // Lógica de comparación de tokens temporales
-        return res.json({
-            ok: true,
-            msg: 'Token verificado exitosamente'
-        });
-    } catch (error: any) {
-        return res.status(500).json({ ok: false, msg: 'Error al verificar token' });
-    }
-};
-
-/**
- * 🔄 Consolidar el cambio de contraseña definitivo
- */
-export const change_password = async (req: Request, res: Response) => {
-    const { email } = req.params;
-    const { password } = req.body;
-    try {
-        const usuario = await Usuario.findOne({ email });
-        if (!usuario) {
-            return res.status(404).json({ ok: false, msg: 'Usuario no encontrado' });
-        }
-
-        const salt = bcrypt.genSaltSync();
-        usuario.password = bcrypt.hashSync(password, salt);
-        usuario.updatedAt = new Date();
-
-        await usuario.save();
-
-        return res.json({
-            ok: true,
-            msg: 'Contraseña cambiada con éxito'
-        });
-    } catch (error: any) {
-        return res.status(500).json({ ok: false, msg: 'Error al cambiar la contraseña' });
-    }
-};
 
 /**
  * 📝 Listar únicamente usuarios que tengan rol EDITOR
@@ -425,5 +368,65 @@ export const actualizarUsuarioRole = async (req: Request, res: Response) => {
             ok: false,
             msg: 'Error al actualizar el rol del usuario'
         });
+    }
+};
+
+
+/**
+ * 🔒 Iniciar proceso de recuperación de contraseña (Token Recovery)
+ */
+export const set_token_recovery = async (req: Request, res: Response) => {
+    const { email } = req.params;
+    try {
+        // Aquí agregarías tu lógica para generar un código/token aleatorio y guardarlo en la DB
+        return res.json({
+            ok: true,
+            msg: `Token de recuperación generado para ${email}`
+        });
+    } catch (error: any) {
+        return res.status(500).json({ ok: false, msg: 'Error de recuperación' });
+    }
+};
+
+/**
+ * 🔑 Verificar el token de recuperación provisto por el usuario
+ */
+export const verify_token_recovery = async (req: Request, res: Response) => {
+    const { email, codigo } = req.params;
+    try {
+        // Lógica de comparación de tokens temporales
+        return res.json({
+            ok: true,
+            msg: 'Token verificado exitosamente'
+        });
+    } catch (error: any) {
+        return res.status(500).json({ ok: false, msg: 'Error al verificar token' });
+    }
+};
+
+/**
+ * 🔄 Consolidar el cambio de contraseña definitivo
+ */
+export const change_password = async (req: Request, res: Response) => {
+    const { email } = req.params;
+    const { password } = req.body;
+    try {
+        const usuario = await Usuario.findOne({ email });
+        if (!usuario) {
+            return res.status(404).json({ ok: false, msg: 'Usuario no encontrado' });
+        }
+
+        const salt = bcrypt.genSaltSync();
+        usuario.password = bcrypt.hashSync(password, salt);
+        usuario.updatedAt = new Date();
+
+        await usuario.save();
+
+        return res.json({
+            ok: true,
+            msg: 'Contraseña cambiada con éxito'
+        });
+    } catch (error: any) {
+        return res.status(500).json({ ok: false, msg: 'Error al cambiar la contraseña' });
     }
 };

@@ -9,7 +9,9 @@
     "dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsc",
     "seed": "ts-node src/seeders/usuariosSeeder.ts",
-    "seed:materiales": "ts-node src/seeders/materialesSeeder.ts"
+    "seed:materiales": "ts-node src/seeders/materialesSeeder.ts",
+    "seed:reglas": "node --experimental-strip-types src/seeders/reglasSeeder.ts",
+    "seed:terminos": "node --experimental-strip-types src/seeders/terminosSeeder.ts"
   },
   "keywords": [],
   "author": "",

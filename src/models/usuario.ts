@@ -11,6 +11,10 @@ export interface IUsuario {
   google: boolean;
   facebook: boolean;
   profile?: Schema.Types.ObjectId; 
+  // 🔐 CAMPOS NUEVOS AGREGADOS A LA INTERFAZ
+  token_recovery?: string; 
+  token_expiry?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +30,10 @@ const usuarioSchema = new Schema({
   google: { type: Boolean, default: false },
   facebook: { type: Boolean, default: false },
   profile: { type: Schema.Types.ObjectId, ref: 'Profile' }, 
+  // 🔐 CAMPOS NUEVOS INYECTADOS EN EL ESQUEMA FÍSICO
+  token_recovery: { type: String, required: false },
+  token_expiry: { type: Date, required: false },
+  
   createdAt: { type: Date, default: Date.now, required: true },
   updatedAt: { type: Date, default: Date.now, required: true }
 }, { collection: 'usuarios' });

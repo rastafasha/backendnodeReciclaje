@@ -8,6 +8,8 @@ import perfilesRoutes from './routes/perfiles';
 import familiaresRoutes from './routes/familiares';
 import uploadsRoutes from './routes/uploads';
 import notificacionesRoutes from './routes/notificaciones';
+import reglasRoutes from './routes/reglas';
+import terminosRoutes from './routes/terminosRoutes';
 
 
 const app = express();
@@ -32,5 +34,7 @@ app.use('/api/perfiles', perfilesRoutes);
 app.use('/api/familiares', familiaresRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/notificaciones', notificacionesRoutes);
+app.use('/api/reglas', reglasRoutes);
+app.use('/api/terminos', terminosRoutes);
 
 export default app;
