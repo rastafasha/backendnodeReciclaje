@@ -14,8 +14,8 @@ const allowedOrigins = [
   "http://localhost:4200",
   "http://localhost:4203", // 👈 Tu panel Admin CRM corriendo aquí
   "http://localhost:4206",
-  "http://localhost:4207",
-  "http://localhost:4300"
+  "https://admn-reciclaje.vercel.app",
+  "https://app-reciclaje-eight.vercel.app"
 ];
 
 // Inicializar Socket.io heredando tu lista blanca simplificada
