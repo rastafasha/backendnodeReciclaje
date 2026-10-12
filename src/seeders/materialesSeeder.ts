@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { dbConnection } from '../database/config';
-import AvanceDiario from '../models/material'; // Sincronizado con tu modelo actual de hábitos
+import AvanceDiario from '../models/avanceDiario'; // Sincronizado con tu modelo actual de hábitos
 
 // Cargar variables de entorno del archivo .env
 dotenv.config();

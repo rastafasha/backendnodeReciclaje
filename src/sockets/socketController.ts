@@ -1,6 +1,6 @@
 import { Socket, Server } from 'socket.io';
 // 🚀 CORREGIDO: Importamos tus tipos reales del modelo de Avances Diarios
-import AvanceDiario, { TipoComida } from '../models/material'; 
+import AvanceDiario, { TipoComida } from '../models/avanceDiario'; 
 import { enviarNotificacionPushGlobal } from '../controllers/pushController';
 
 export const socketController = (socket: Socket, io: Server) => {

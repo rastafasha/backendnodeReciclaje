@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import MaterialReciclado from '../models/material';
-import AvanceDiario from '../models/material';
+import AvanceDiario from '../models/avanceDiario';
 
 /**
  * 📈 Registrar una entrega de material mediante HTTP POST
@@ -71,7 +70,7 @@ export const getHistorialUsuario = async (req: Request, res: Response) => {
 
     try {
         // Buscamos los materiales ordenados del más reciente al más antiguo
-        const historial = await MaterialReciclado.find({ usuario: usuarioId as any })
+        const historial = await AvanceDiario.find({ usuario: usuarioId as any })
             .sort({ createdAt: -1 });
 
         return res.json({
@@ -94,7 +93,7 @@ export const getHistorialUsuario = async (req: Request, res: Response) => {
 export const getEstadisticasGlobales = async (req: Request, res: Response) => {
     try {
         // Trae los últimos 20 registros de todo el sistema e incluye el nombre del usuario
-        const ultimosRegistros = await MaterialReciclado.find()
+        const ultimosRegistros = await AvanceDiario.find()
             .populate('usuario', 'username email')
             .sort({ createdAt: -1 })
             .limit(20);

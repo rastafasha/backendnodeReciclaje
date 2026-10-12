@@ -1,6 +1,6 @@
 import Usuario from '../models/usuario';
 import Profile from '../models/profile';
-import MaterialReciclado from '../models/material';
+import MaterialReciclado from '../models/avanceDiario';
 
 export const actualizarImagen = async (
     tipo: string, 

@@ -10,12 +10,47 @@ import uploadsRoutes from './routes/uploads';
 import notificacionesRoutes from './routes/notificaciones';
 import reglasRoutes from './routes/reglas';
 import terminosRoutes from './routes/terminosRoutes';
-
+import gamificacionRoutes from './routes/gamificacion';
+import comunicadoRoutes from './routes/comunicado';
 
 const app = express();
 
-// Middlewares globales
-app.use(cors());
+// =========================================================================
+// 🛡️ CONFIGURACIÓN DE CORS PARA APPRECICLAJE (DESARROLLO LOCAL Y PROD)
+// =========================================================================
+const allowedOrigins = [
+  "http://localhost:4200",
+  "http://localhost:4203", // 👈 Tu panel Admin CRM corriendo aquí
+  "http://localhost:4206",
+  "http://localhost:4207",
+  "http://localhost:4300"
+];
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Permitir peticiones sin origen (como Postman o peticiones internas de servidores)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`❌ [CORS RECHAZADO]: El origen ${origin} no está autorizado.`);
+      callback(new Error('Origen no permitido por CORS'));
+    }
+  },
+  // Cabeceras estrictas que envían tus interceptores de Angular
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-token", // 👈 Indispensable para validar sesiones en Node.js
+    "X-Token", 
+    "Accept"
+  ],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  credentials: true,
+  optionsSuccessStatus: 200 // Libera el preflight check en Chrome/Edge sin demoras
+};
+
+// Middlewares globales en orden secuencial correcto
+app.use(cors(corsOptions)); 
 app.use(express.json());
 
 // Ruta de estado de la API
@@ -26,7 +61,7 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// Aquí importaremos y usaremos las rutas más adelante (ej: app.use('/api/usuarios', usuarioRoutes);)
+// Enrutadores principales de tu API
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/materiales', materialesRoutes);
@@ -36,5 +71,7 @@ app.use('/api/uploads', uploadsRoutes);
 app.use('/api/notificaciones', notificacionesRoutes);
 app.use('/api/reglas', reglasRoutes);
 app.use('/api/terminos', terminosRoutes);
+app.use('/api/gamificacion', gamificacionRoutes);
+app.use('/api/comunicados', comunicadoRoutes);
 
 export default app;
