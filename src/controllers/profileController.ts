@@ -34,55 +34,76 @@ export const getMiPerfil = async (req: Request, res: Response) => {
     }
 };
 
+
 /**
- * 📝 Actualizar la información personal del perfil
+ * 📝 Actualizar la información personal del perfil (Creación automática al vuelo integrada)
  */
 export const actualizarPerfil = async (req: Request, res: Response) => {
     const usuarioId = req.uid;
     const { first_name, last_name, phone_office, phone_mobile, avatar_url, pais, ciudad } = req.body;
 
     try {
-        // Buscamos el perfil que le pertenece al usuario autenticado
-        const perfilDB = await Profile.findOne({ usuario: usuarioId as any });
+        // 1. Buscamos el perfil que le pertenece al usuario autenticado en Atlas
+        let perfilDB = await Profile.findOne({ usuario: usuarioId as any });
 
+        // 🛡️ ACCIÓN AUTOMÁTICA EN CALIENTE: Si el perfil no existe, lo inicializamos de golpe
         if (!perfilDB) {
-            return res.status(404).json({
-                ok: false,
-                msg: 'No se encontró un perfil asociado a su cuenta'
+            console.log(`⚠️ No se encontró perfil para el UID [${usuarioId}]. Creando documento automático...`);
+            
+            perfilDB = new Profile({
+                usuario: usuarioId,
+                first_name: first_name || '',
+                last_name: last_name || '',
+                phone_office: phone_office || '',
+                phone_mobile: phone_mobile || '',
+                avatar_url: avatar_url || 'assets/images/default.jpeg',
+                pais: pais || '',
+                ciudad: ciudad || '',
+                // Inicializamos los valores por defecto del concurso Mercadona / UCC para la rama gamificación
+                puntos_acumulados: 0,
+                rango: 'Pollito',
+                createdAt: new Date()
             });
+
+            // Guardamos el nuevo registro base en MongoDB Atlas
+            await perfilDB.save();
+            console.log(`✅ Perfil automático inicializado en Atlas con ID: ${perfilDB._id}`);
         }
 
-        // Estructuramos los campos a actualizar protegiendo que no alteren los puntos por aquí
+        // 2. Estructuramos los campos a actualizar garantizando la persistencia de datos previos
         const camposActualizar = {
-            first_name: first_name || perfilDB.first_name,
-            last_name: last_name || perfilDB.last_name,
-            phone_office: phone_office || perfilDB.phone_office,
-            phone_mobile: phone_mobile || perfilDB.phone_mobile,
-            avatar_url: avatar_url || perfilDB.avatar_url,
-            pais: pais || perfilDB.pais,
-            ciudad: ciudad || perfilDB.ciudad,
+            first_name: first_name !== undefined ? first_name : perfilDB.first_name,
+            last_name: last_name !== undefined ? last_name : perfilDB.last_name,
+            phone_office: phone_office !== undefined ? phone_office : perfilDB.phone_office,
+            phone_mobile: phone_mobile !== undefined ? phone_mobile : perfilDB.phone_mobile,
+            avatar_url: avatar_url !== undefined ? avatar_url : perfilDB.avatar_url,
+            pais: pais !== undefined ? pais : perfilDB.pais,
+            ciudad: ciudad !== undefined ? ciudad : perfilDB.ciudad,
             updatedAt: new Date()
         };
 
+        // 3. Ejecutamos la actualización segura sobre el documento garantizado
         const perfilActualizado = await Profile.findOneAndUpdate(
             { usuario: usuarioId as any },
             camposActualizar,
             { new: true } // Para que devuelva el objeto modificado en la respuesta
-        );
+        ).populate('usuario', 'username email'); // Opcional: por si tu Front necesita el join del login al vuelo
 
         return res.json({
             ok: true,
             msg: 'Perfil actualizado con éxito',
             perfil: perfilActualizado
         });
+
     } catch (error: any) {
-        console.error(error);
+        console.error('❌ Error crítico al procesar la actualización del perfil:', error);
         return res.status(500).json({
             ok: false,
-            msg: 'Error interno al actualizar el perfil'
+            msg: 'Error interno al actualizar el perfil en el servidor'
         });
     }
 };
+
 
 /**
  * ♻️ Función auxiliar interna/admin para sumar o restar puntos al perfil del usuario
