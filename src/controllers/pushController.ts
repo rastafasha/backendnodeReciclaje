@@ -63,9 +63,18 @@ export const enviarNotificacionPushGlobal = async (
         });
 
         const promesasEnvio = suscripciones.map((suscripcion: any) => {
-            return webpush.sendNotification(suscripcion, payloadJson)
-                // 🚀 AGREGAMOS ': any' PARA REPARAR EL ERROR TS7006
-                .catch((err: any) => { 
+            // 🟢 CORRECCIÓN CRÍTICA: Estructuramos el objeto JSON plano y limpio que requiere webpush
+            // extrayendo endpoint y las llaves del documento físico de Atlas
+            const pushConfig = {
+                endpoint: suscripcion.endpoint,
+                keys: {
+                    p256dh: suscripcion.keys.p256dh,
+                    auth: suscripcion.keys.auth
+                }
+            };
+
+            return webpush.sendNotification(pushConfig, payloadJson)
+                .catch(async (err: any) => { 
                     if (err.statusCode === 410 || err.statusCode === 404) {
                         console.log('🧹 [WEBPUSH]: Token expirado o revocado. Limpiando registro de Mongo...');
                         return SuscripcionPush.deleteOne({ _id: suscripcion._id });
