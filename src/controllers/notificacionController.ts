@@ -53,3 +53,38 @@ export const marcarTodasComoLeidas = async (req: Request, res: Response): Promis
     });
   }
 };
+
+/**
+ * 📚 OBTENER HISTORIAL DE NOTIFICACIONES LEÍDAS (PAGINADO)
+ * GET /api/notificaciones/leidas?desde=X
+ */
+export const getNotificacionesLeidas = async (req: Request, res: Response) => {
+    // El uid ya viene inyectado de forma segura por el middleware validarJWT
+    const usuarioId = req.uid;
+    
+    // Capturamos el inicio de la paginación desde la query string (por defecto 0)
+    const desde = Number(req.query.desde) || 0;
+
+    try {
+        // Ejecutamos ambas consultas en paralelo para ahorrar tiempos de respuesta en Atlas
+        const [alertas, total] = await Promise.all([
+            Notificacion.find({ usuario: usuarioId as any, leido: true })
+                .sort({ createdAt: -1 }) // Primero las más recientes que leyó
+                .skip(desde)
+                .limit(20), // Bloques cómodos de 20 en 20 para el scroll del celular
+            Notificacion.countDocuments({ usuario: usuarioId as any, leido: true })
+        ]);
+
+        return res.json({ 
+            ok: true, 
+            alertas,
+            total 
+        });
+    } catch (error) {
+        console.error('❌ Error en getNotificacionesLeidas:', error);
+        return res.status(500).json({ 
+            ok: false, 
+            msg: 'Error al recuperar el historial de notificaciones leídas.' 
+        });
+    }
+};
