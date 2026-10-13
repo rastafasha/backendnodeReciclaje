@@ -2,8 +2,31 @@ import { Socket, Server } from 'socket.io';
 // 🚀 CORREGIDO: Importamos tus tipos reales del modelo de Avances Diarios
 import AvanceDiario, { TipoComida } from '../models/avanceDiario'; 
 import { enviarNotificacionPushGlobal } from '../controllers/pushController';
+import jwt from 'jsonwebtoken';
 
 export const socketController = (socket: Socket, io: Server) => {
+
+     // 🔐 Capturamos el token enviado de forma segura desde el cliente de Angular/Ionic
+    const token = socket.handshake.auth['x-token'] || socket.handshake.headers['x-token'];
+
+    if (!token) {
+        console.log('❌ [SOCKET RECHAZADO]: Conexión sin credenciales de token.');
+        return socket.disconnect();
+    }
+
+     try {
+        // Validamos el JWT con tu llave secreta del .env
+        const payload: any = jwt.verify(token, process.env.JWT_SECRET || 'tu-llave-secreta');
+        console.log(`🔌 [SOCKET CONECTADO]: Retador unificado con UID: ${payload.uid}`);
+        
+        // Unimos al usuario a una sala privada con su ID para enviarle alertas directas si es necesario
+        socket.join(payload.uid);
+
+    } catch (error) {
+        console.log('❌ [SOCKET ERROR]: Token inválido o expirado.');
+        return socket.disconnect();
+    }
+
     console.log(`🔌 Cliente conectado: ${socket.id}`);
 
     socket.on('join-room', (uid: string) => {

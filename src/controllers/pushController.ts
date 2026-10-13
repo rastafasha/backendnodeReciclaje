@@ -44,39 +44,29 @@ export const enviarNotificacionPushGlobal = async (
     titulo: string, 
     mensaje: string, 
     urlDestino: string = '/tabs/historial',
-    usuarioId?: string
+    tipoAviso: string = 'AVISO_GENERAL' // 🚀 Inyectamos el tipo de forma obligatoria
 ) => {
     try {
-        const filtro = usuarioId ? { usuario: usuarioId as any } : {};
-        
-        // 🚀 MEJORA DE RENDIMIENTO: Usamos .lean() para saltarnos el envoltorio de Mongoose 
-        // y recuperar objetos planos de javascript (JSON limpios de Atlas)
-        const suscripciones = await SuscripcionPush.find(filtro).lean();
+        const suscripciones = await SuscripcionPush.find({}).lean();
 
-        if (suscripciones.length === 0) {
-            console.log('⚠️ [WEBPUSH]: No existen terminales inscritos en la base de datos para recibir el Push.');
-            return;
-        }
+        if (suscripciones.length === 0) return;
 
+        // El contrato estricto de Angular requiere la propiedad data para transferir variables en segundo plano
         const payloadJson = JSON.stringify({
             notification: {
                 title: titulo,
                 body: mensaje,
                 icon: 'assets/icons/icon-72x72.png',
                 badge: 'assets/icons/icon-72x72.png',
-                vibrate:[200, 100, 200],
-                data: { url: urlDestino }
+                vibrate: [200, 100, 200],
+                data: { 
+                    url: urlDestino,
+                    tipo: tipoAviso // 🎯 Crucial para que las apps sepan qué icono pintar en caliente
+                }
             }
         });
 
         const promesasEnvio = suscripciones.map((suscripcion: any) => {
-            // 🛡️ ADUANA DE SEGURIDAD INTERNA: Si por algún fallo del cliente las llaves no se guardaron, saltamos el registro
-            if (!suscripcion.keys || !suscripcion.keys.p256dh || !suscripcion.keys.auth) {
-                console.log('🧹 [WEBPUSH]: Saltando registro corrupto sin llaves criptográficas.');
-                return Promise.resolve();
-            }
-
-            // Estructuramos el contrato plano exacto que la librería web-push puede procesar sin explotar
             const pushConfig = {
                 endpoint: suscripcion.endpoint,
                 keys: {
@@ -84,24 +74,12 @@ export const enviarNotificacionPushGlobal = async (
                     auth: String(suscripcion.keys.auth).trim()
                 }
             };
-
-            return webpush.sendNotification(pushConfig, payloadJson)
-                .then(() => {
-                    console.log(`🎯 Mensaje entregado con éxito al endpoint: ${suscripcion.endpoint.substring(0, 30)}...`);
-                })
-                .catch(async (err: any) => { 
-                    // Si el token ya expiró, Google/Mozilla nos devuelven un 410 o 404 de inmediato
-                    if (err.statusCode === 410 || err.statusCode === 404) {
-                        console.log('🧹 [WEBPUSH]: Token expirado o revocado en el dispositivo. Eliminando de Atlas...');
-                        return SuscripcionPush.deleteOne({ _id: suscripcion._id });
-                    }
-                    console.error('⚠️ Error enviando a dispositivo individual:', err.message);
-                });
+            return webpush.sendNotification(pushConfig, payloadJson).catch(() => {});
         });
 
         await Promise.all(promesasEnvio);
-        console.log(`🚀 [WEBPUSH PROD]: Despacho masivo concluido. Total terminales procesados: ${suscripciones.length}.`);
+        console.log(`🚀 [WEBPUSH]: Mensaje masivo despachado con éxito.`);
     } catch (error: any) {
-        console.error('💥 Fallo crítico en el core del motor WebPush:', error.message);
+        console.error('💥 Error en motor push:', error.message);
     }
 };

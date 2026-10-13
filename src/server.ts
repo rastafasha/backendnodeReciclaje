@@ -33,6 +33,8 @@ export const io = new Server(server, {
     methods: ['GET', 'POST'],
     credentials: true
   },
+  allowEIO3: true, // 🛡️ Retrocompatibilidad de protocolo por si las librerías difieren
+  transports: ['websocket', 'polling'], // 🚀 Forzamos par de transportes estables
   pingTimeout: 60000,
   pingInterval: 25000
 });

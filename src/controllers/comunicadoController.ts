@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import Comunicado from '../models/comunicado'; 
+import Comunicado from '../models/comunicado';
 import Notificacion from '../models/notificacion';
-import SuscripcionPush from '../models/suscripcionPush';
-import Usuario from '../models/usuario'; 
+import Usuario from '../models/usuario';
 import { enviarNotificacionPushGlobal } from './pushController'; // Tu motor enviador real
+import { io } from '../server';
 
 /**
  * 📊 1. CONTAR NOTIFICACIONES NO LEÍDAS (Para el Badge del Navbar)
@@ -74,9 +74,9 @@ export const enviarComunicadoGlobal = async (req: Request, res: Response): Promi
     // 2. Persistir el Comunicado físico en la colección 'comunicados'
     const nuevoComunicado = new Comunicado({
       titulo,
-      mensaje, 
+      mensaje,
       tipo: tipo || 'CARTELERA',
-      creado_por: adminId, 
+      creado_por: adminId,
       notificado_push: notificado_push || false
     });
     await nuevoComunicado.save();
@@ -90,16 +90,18 @@ export const enviarComunicadoGlobal = async (req: Request, res: Response): Promi
       leido: false
     }));
     await Notificacion.insertMany(registrosNotificaciones);
+    // 🚀 DISPARO POR WEB SUCKETS EN TIEMPO REAL: Le avisa a todos los celulares conectados
+    io.emit('notificacion-recibida', { titulo, mensaje, tipo });
 
     // 4. Si el switch administrador fue activado, detonar el Motor WebPush Remoto en caliente
     if (notificado_push) {
-      const urlDestino = '/tabs/historial'; // Ruta de destino en Ionic/PWA
-      await enviarNotificacionPushGlobal(titulo, mensaje, urlDestino);
+      const urlDestino = '/notificaciones';
+      await enviarNotificacionPushGlobal(titulo, mensaje, urlDestino, tipo || 'AVISO_GENERAL'); // 🎯 Pasamos el tipo real
     }
 
-    return res.json({ 
-      ok: true, 
-      msg: `Comunicado publicado y despachado a ${idsUsuarios.length} retadores con éxito. ♻️` 
+    return res.json({
+      ok: true,
+      msg: `Comunicado publicado y despachado a ${idsUsuarios.length} retadores con éxito. ♻️`
     });
 
   } catch (error: any) {
@@ -116,7 +118,7 @@ export const marcarTodasComoLeidas = async (req: Request, res: Response): Promis
   const uid = req.uid;
   try {
     const resultado = await Notificacion.updateMany(
-      { usuario: uid as any, leido: false }, 
+      { usuario: uid as any, leido: false },
       { leido: true }
     );
 
