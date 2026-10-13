@@ -22,3 +22,34 @@ export const marcarLeida = async (req: Request, res: Response) => {
         return res.status(500).json({ ok: false, msg: 'Error al actualizar estado.' });
     }
 };
+
+/**
+ * 🧹 MARCAR TODAS LAS NOTIFICACIONES DEL USUARIO COMO LEÍDAS
+ * PUT /api/notificaciones/marcar-todas-leidas
+ */
+export const marcarTodasComoLeidas = async (req: Request, res: Response): Promise<Response> => {
+  // Extraemos de forma segura el uid inyectado por tu middleware validarJWT
+  const uid = req.uid;
+
+  try {
+    // Buscamos todas las alertas de este usuario que estén pendientes y las actualizamos
+    const resultado = await Notificacion.updateMany(
+      { usuario: uid as any, leido: false },
+      { $set: { leido: true } }
+    );
+
+    return res.status(200).json({
+      ok: true,
+      msg: 'Todas las notificaciones se marcaron como leídas de forma masiva.',
+      modificadas: resultado.modifiedCount // Total de registros limpiados en Atlas
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error masivo en marcarTodasComoLeidas:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error interno en el servidor al intentar limpiar la bandeja.',
+      error: error.message
+    });
+  }
+};
