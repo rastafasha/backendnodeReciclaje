@@ -5,8 +5,8 @@ import SuscripcionPush from '../models/suscripcionPush';
 // Configuración global de WebPush con tus llaves criptográficas del .env
 webpush.setVapidDetails(
     'mailto:mercadocreativo@gmail.com',
-    process.env.VAPI_KEY_PUBLIC || '', // Forzamos strings vacíos si falla la lectura
-    process.env.VAPI_KEY_PRIVATE || ''
+    process.env.VAPI_KEY_PUBLIC || process.env.VAPID_PUBLIC_KEY || '', 
+    process.env.VAPI_KEY_PRIVATE || process.env.VAPID_PRIVATE_KEY || ''
 );
 
 /**
@@ -14,7 +14,7 @@ webpush.setVapidDetails(
  */
 export const guardarSuscripcion = async (req: Request, res: Response) => {
     const suscripcionEntrante = req.body;
-    const usuarioId = req.uid; // Extraído de tu validarJWT si está logueado
+    const usuarioId = req.uid;
 
     if (!suscripcionEntrante || !suscripcionEntrante.endpoint) {
         return res.status(400).json({ ok: false, msg: 'La suscripción no contiene un endpoint válido.' });
@@ -38,7 +38,7 @@ export const guardarSuscripcion = async (req: Request, res: Response) => {
 };
 
 /**
- * 🚀 MOTOR ENVIADOR GLOBAL: Despacha alertas a perfiles específicos o a todos
+ * 🚀 MOTOR ENVIADOR GLOBAL ACTUALIZADO Y BLINDADO
  */
 export const enviarNotificacionPushGlobal = async (
     titulo: string, 
@@ -47,9 +47,16 @@ export const enviarNotificacionPushGlobal = async (
     usuarioId?: string
 ) => {
     try {
-        // Si viene un usuarioId, enviamos solo a sus dispositivos, si no, a todos (Aviso General)
         const filtro = usuarioId ? { usuario: usuarioId as any } : {};
-        const suscripciones = await SuscripcionPush.find(filtro);
+        
+        // 🚀 MEJORA DE RENDIMIENTO: Usamos .lean() para saltarnos el envoltorio de Mongoose 
+        // y recuperar objetos planos de javascript (JSON limpios de Atlas)
+        const suscripciones = await SuscripcionPush.find(filtro).lean();
+
+        if (suscripciones.length === 0) {
+            console.log('⚠️ [WEBPUSH]: No existen terminales inscritos en la base de datos para recibir el Push.');
+            return;
+        }
 
         const payloadJson = JSON.stringify({
             notification: {
@@ -63,20 +70,29 @@ export const enviarNotificacionPushGlobal = async (
         });
 
         const promesasEnvio = suscripciones.map((suscripcion: any) => {
-            // 🟢 CORRECCIÓN CRÍTICA: Estructuramos el objeto JSON plano y limpio que requiere webpush
-            // extrayendo endpoint y las llaves del documento físico de Atlas
+            // 🛡️ ADUANA DE SEGURIDAD INTERNA: Si por algún fallo del cliente las llaves no se guardaron, saltamos el registro
+            if (!suscripcion.keys || !suscripcion.keys.p256dh || !suscripcion.keys.auth) {
+                console.log('🧹 [WEBPUSH]: Saltando registro corrupto sin llaves criptográficas.');
+                return Promise.resolve();
+            }
+
+            // Estructuramos el contrato plano exacto que la librería web-push puede procesar sin explotar
             const pushConfig = {
                 endpoint: suscripcion.endpoint,
                 keys: {
-                    p256dh: suscripcion.keys.p256dh,
-                    auth: suscripcion.keys.auth
+                    p256dh: String(suscripcion.keys.p256dh).trim(),
+                    auth: String(suscripcion.keys.auth).trim()
                 }
             };
 
             return webpush.sendNotification(pushConfig, payloadJson)
+                .then(() => {
+                    console.log(`🎯 Mensaje entregado con éxito al endpoint: ${suscripcion.endpoint.substring(0, 30)}...`);
+                })
                 .catch(async (err: any) => { 
+                    // Si el token ya expiró, Google/Mozilla nos devuelven un 410 o 404 de inmediato
                     if (err.statusCode === 410 || err.statusCode === 404) {
-                        console.log('🧹 [WEBPUSH]: Token expirado o revocado. Limpiando registro de Mongo...');
+                        console.log('🧹 [WEBPUSH]: Token expirado o revocado en el dispositivo. Eliminando de Atlas...');
                         return SuscripcionPush.deleteOne({ _id: suscripcion._id });
                     }
                     console.error('⚠️ Error enviando a dispositivo individual:', err.message);
@@ -84,8 +100,8 @@ export const enviarNotificacionPushGlobal = async (
         });
 
         await Promise.all(promesasEnvio);
-        console.log(`🚀 [WEBPUSH]: Alerta Push enviada con éxito a ${suscripciones.length} terminales.`);
+        console.log(`🚀 [WEBPUSH PROD]: Despacho masivo concluido. Total terminales procesados: ${suscripciones.length}.`);
     } catch (error: any) {
-        console.error('💥 Fallo crítico en el motor WebPush:', error.message);
+        console.error('💥 Fallo crítico en el core del motor WebPush:', error.message);
     }
 };

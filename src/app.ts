@@ -23,6 +23,8 @@ const allowedOrigins = [
   "http://localhost:4200",
   "http://localhost:4203", // 👈 Tu panel Admin CRM corriendo aquí
   "http://localhost:8100", // 👈 Tu panel Admin CRM corriendo aquí
+  "http://localhost:3001", // 👈 Tu panel Admin CRM corriendo aquí
+  "http://localhost:3003", // 👈 Tu panel Admin CRM corriendo aquí
   "https://admn-reciclaje.vercel.app",
   "https://app-reciclaje-eight.vercel.app",
 ];
