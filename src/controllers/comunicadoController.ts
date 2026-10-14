@@ -131,3 +131,31 @@ export const marcarTodasComoLeidas = async (req: Request, res: Response): Promis
     return res.status(500).json({ ok: false, msg: 'Error al limpiar notificaciones', error: error.message });
   }
 };
+
+export const eliminarComunicadoGlobal = async (req: Request, res: Response) => {
+    // 🎯 Captura directa desde los parámetros de la URL de Express
+    const { id } = req.params; 
+
+    try {
+        const comunicadoBorrado = await Comunicado.findByIdAndDelete(id);
+
+        if (!comunicadoBorrado) {
+            return res.status(404).json({ 
+                ok: false, 
+                msg: 'No se encontró el registro del comunicado en MongoDB Atlas.' 
+            });
+        }
+
+        return res.json({ 
+            ok: true, 
+            msg: 'Comunicado removido exitosamente de todas las aplicaciones móviles. 🧹' 
+        });
+    } catch (error: any) {
+        console.error('❌ Error en eliminarComunicadoGlobal:', error.message);
+        return res.status(500).json({ 
+            ok: false, 
+            msg: 'Error interno en el servidor al intentar borrar el documento.',
+            error: error.message 
+        });
+    }
+};

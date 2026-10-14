@@ -11,7 +11,8 @@
     "seed": "ts-node src/seeders/usuariosSeeder.ts",
     "seed:materiales": "ts-node src/seeders/materialesSeeder.ts",
     "seed:reglas": "node --experimental-strip-types src/seeders/reglasSeeder.ts",
-    "seed:terminos": "node --experimental-strip-types src/seeders/terminosSeeder.ts"
+    "seed:terminos": "node --experimental-strip-types src/seeders/terminosSeeder.ts",
+    "seed:tips": "node --experimental-strip-types src/seeders/tipsSeeder.ts"
   },
   "keywords": [],
   "author": "",

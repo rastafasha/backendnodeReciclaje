@@ -13,6 +13,7 @@ import terminosRoutes from './routes/terminosRoutes';
 import gamificacionRoutes from './routes/gamificacion';
 import comunicadoRoutes from './routes/comunicado';
 import busquedaRoutes from './routes/busqueda';
+import consejosRoutes from './routes/consejo';
 
 const app = express();
 
@@ -76,6 +77,7 @@ app.use('/api/reglas', reglasRoutes);
 app.use('/api/terminos', terminosRoutes);
 app.use('/api/gamificacion', gamificacionRoutes);
 app.use('/api/comunicados', comunicadoRoutes);
+app.use('/api/consejos', consejosRoutes);
 app.use('/api/todo', busquedaRoutes);
 
 export default app;

@@ -3,7 +3,8 @@ import {
   enviarComunicadoGlobal, 
   obtenerMisComunicados, 
   marcarTodasComoLeidas, 
-  contarNotificacionesPendientes 
+  contarNotificacionesPendientes,
+  eliminarComunicadoGlobal
 } from '../controllers/comunicadoController';
 import { validarJWT } from '../middlewares/validar-jwt'; // Tu validador de tokens del CRM
 
@@ -14,5 +15,5 @@ router.post('/enviar-global', validarJWT, enviarComunicadoGlobal);
 router.get('/mis-comunicados', validarJWT, obtenerMisComunicados);
 router.put('/marcar-todas-leidas', validarJWT, marcarTodasComoLeidas);
 router.get('/pendientes-conteo', validarJWT, contarNotificacionesPendientes);
-
+router.delete('/delete/:id', [validarJWT], eliminarComunicadoGlobal);
 export default router;
