@@ -1,17 +1,19 @@
 import { Schema, model, Model } from 'mongoose';
 
-// 1. Tipos estrictos para las 3 comidas del Figma y Coggle
 export type TipoComida = 'DESAYUNO' | 'ALMUERZO' | 'CENA';
 export type CategoriaAlimento = 'PROTEINAS' | 'CARBOHIDRATOS' | 'VEGETALES_FRUTAS';
 
 export interface IAvanceDiario {
   usuario: Schema.Types.ObjectId;  
-  comida: TipoComida;            // Desayuno, Almuerzo o Cena
-  categoria: CategoriaAlimento;  // Proteínas, Carbohidratos, Vegetales
-  nombreItem: string;            // Nombre del plato/residuo
-  descripcion: string;           // Descripción corta (máx caracteres)
-  puntosOtorgados: number;       // Siempre sumará 1 punto por comida
-  fechaString: string;           // Formato 'YYYY-MM-DD' para bloquear duplicados en el mismo día
+  comida: TipoComida;            
+  categoria: CategoriaAlimento;  
+  nombreItem: string;            
+  descripcion: string;           
+  puntosOtorgados: number;       
+  fechaString: string;           
+  fotoUrl: string;               // 📸 URL de la foto comprimida en Cloudinary
+  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO'; // ⚖️ El veredicto de la IA
+  motivoIA: string;             // 🧠 Explicación de Gemini
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,19 +42,32 @@ const avanceDiarioSchema = new Schema({
   descripcion: {
     type: String,
     required: [true, 'La descripción es obligatoria'],
-    maxlength: [250, 'La descripción no puede superar los 250 caracteres'] // Restricción del Coggle
+    maxlength: [250, 'La descripción no puede superar los 250 caracteres']
   },
   puntosOtorgados: {
     type: Number,
-    default: 1 // Cada comida aprobada suma exactamente 1 punto
+    default: 0 // Inicia en 0 hasta que la IA determine si es válido
   },
   fechaString: {
-    type: String, // Almacena '2026-10-09' para hacer validaciones de racha
+    type: String, 
     required: true
+  },
+  // 🆕 Nuevos campos integrados para la IA anti-fraude
+  fotoUrl: {
+    type: String,
+    required: [true, 'La evidencia fotográfica de Cloudinary es obligatoria']
+  },
+  estado: {
+    type: String,
+    enum: ['PENDIENTE', 'APROBADO', 'RECHAZADO'],
+    default: 'PENDIENTE'
+  },
+  motivoIA: {
+    type: String,
+    default: 'Pendiente de auditoría por IA'
   }
 }, { timestamps: true, collection: 'avances_diarios' });
 
-// 🚀 ÍNDICE COMPUESTO ÚNICO: Evita físicamente que un usuario registre dos desayunos el mismo día
 avanceDiarioSchema.index({ usuario: 1, comida: 1, fechaString: 1 }, { unique: true });
 
 avanceDiarioSchema.method('toJSON', function() {

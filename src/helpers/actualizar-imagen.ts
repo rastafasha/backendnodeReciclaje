@@ -10,6 +10,11 @@ export const actualizarImagen = async (
 ): Promise<boolean> => {
 
     switch (tipo) {
+        case 'avances':
+            // 🎯 BYPASS IA ANTI-FRAUDE:
+            // No buscamos en la base de datos porque el registro diario se creará 
+            // justo después de que Gemini analice esta imagen. Retornamos true para validar la subida.
+            return true;
         case 'usuarios':
             const usuario = await Usuario.findById(id);
             if (!usuario) {

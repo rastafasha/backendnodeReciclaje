@@ -15,7 +15,7 @@ export const fileUpload = async (req: Request, res: Response) => {
     const { tipo, id } = req.params as { tipo: string; id: string }
 
     // 1. Validar las colecciones válidas de tu App de Reciclaje
-    const tiposValidos = ['usuarios', 'perfiles', 'materiales'];
+    const tiposValidos = ['usuarios', 'perfiles', 'materiales', 'avances'];
     if (!tiposValidos.includes(tipo)) {
         return res.status(400).json({ ok: false, msg: 'Tipo de colección no permitido' });
     }
@@ -57,17 +57,31 @@ export const fileUpload = async (req: Request, res: Response) => {
             folder: `appreciclaje/uploads/${tipo}/`,
             public_id: uuidv4(),
             transformation: [
-                { width: 1000, crop: "limit" }, 
-                { quality: "auto" },            
-                { fetch_format: "auto" }        
+                { width: 1000, crop: "limit" },
+                { quality: "auto" },
+                { fetch_format: "auto" }
             ]
         });
+
+       
+
 
         const urlImagen = result.secure_url;
         const campoDestino = (req.query.campo as string) || null;
 
         // 7. Actualizar la referencia en la base de datos distribuida
         const dbActualizada = await actualizarImagen(tipo, id, urlImagen, campoDestino);
+        
+         // 7. Actualizar la referencia en la base de datos distribuida
+        if (tipo === 'avances') {
+            // 🎯 BYPASS: Como es un avance, no actualizamos base de datos todavía.
+            // Solo le retornamos la URL a Ionic para que la use el controlador de Gemini.
+            return res.json({
+                ok: true,
+                msg: 'Imagen de avance subida y optimizada con éxito 🎉',
+                nombreArchivo: urlImagen // Retorna la URL de Cloudinary
+            });
+        }
 
         if (!dbActualizada) {
             return res.status(400).json({ ok: false, msg: 'No se pudo asociar la imagen al registro' });

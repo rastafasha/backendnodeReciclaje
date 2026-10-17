@@ -14,6 +14,7 @@ import gamificacionRoutes from './routes/gamificacion';
 import comunicadoRoutes from './routes/comunicado';
 import busquedaRoutes from './routes/busqueda';
 import consejosRoutes from './routes/consejo';
+import sorteoRoutes from './routes/sorteo';
 
 const app = express();
 
@@ -79,5 +80,6 @@ app.use('/api/gamificacion', gamificacionRoutes);
 app.use('/api/comunicados', comunicadoRoutes);
 app.use('/api/consejos', consejosRoutes);
 app.use('/api/todo', busquedaRoutes);
+app.use('/api/sorteo', sorteoRoutes);
 
 export default app;
