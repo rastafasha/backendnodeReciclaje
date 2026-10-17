@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { body } from 'express-validator';
-import { getReglas, updateReglas } from '../controllers/reglasController';
+import { getReglas, updateReglas,createReglas } from '../controllers/reglasController';
 import { validarJWT } from '../middlewares/validar-jwt'; // Ajusta la ruta a tu carpeta
 import { validarCampos } from '../middlewares/validar-campos'; // Ajusta la ruta a tu carpeta
 
@@ -31,7 +31,7 @@ router.get('/', getReglas);
 // 🔌 Endpoint Privado (Consumido por el Admin CRM)
 // ==========================================
 router.put(
-  '/reglas',
+  '/update',
   [
     validarJWT,       // 1. Verifica que la sesión exista y sea válida
     validarAdmin,     // 2. Filtra que el rol sea administrativo
@@ -44,5 +44,7 @@ router.put(
   ],
   updateReglas
 );
+
+router.post('/store', [validarJWT], createReglas);
 
 export default router;
